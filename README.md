@@ -19,3 +19,9 @@ Make sure in project settings > Graphics, Projcet Settings > Quality > Rendering
 
 It works best when the set to execute after rendering but feel free to play with the code and the settings to make it work for you.
 
+---
+
+# [Custom] Add Depth
+
+![Outline Depth](https://github.com/user-attachments/assets/eeed1815-d035-452f-a937-8745c9abde2a)
+![RenderData](https://github.com/user-attachments/assets/91ef6161-9266-4ab1-a6da-ebb22e30a290)
