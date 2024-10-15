@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -48,21 +48,24 @@ public class OutlineMeshesInLayerFeature : ScriptableRendererFeature
         public Material outlineMaterial;
         [ColorUsage(true, true)] public Color outlineColor = Color.white;
         [Range(0f, 100f)] public float outlinePixelWidth = 4f;
-        public RenderPassEvent renderPassEvent = RenderPassEvent.AfterRenderingOpaques;
+        //public RenderPassEvent renderPassEvent = RenderPassEvent.AfterRenderingOpaques;
         public LayerMask layerToRender;
         public bool useSeperableAxisMethod = true;
 
-        [Header ("Override")]
-        [Header ("FillStencil")]
-        public bool FillStencil_DepthState = false;
-        public bool FillStencil_enableWrite = true;
-        public CompareFunction FillStencil_depthCompareFunction = CompareFunction.LessEqual;
-        [Space]
-        [Header ("Silhouette")]
-        public bool Silhouette_DepthState = false;
-        public bool Silhouette_enableWrite = true;
-        public CompareFunction Silhouette_depthCompareFunction = CompareFunction.LessEqual;
+        [Header ("Jump Flood For Outline Pass")]
+        public RenderPassEvent JumpFloodForOutlinePass_renderPassEvent = RenderPassEvent.AfterRenderingOpaques;
 
+        [Header ("Fill Stencil")]
+        public bool FillStencil_DepthState = false;
+        public bool FillStencil_enableWrite = false;
+        public RenderPassEvent FillStencil_renderPassEvent = RenderPassEvent.AfterRenderingOpaques;
+        public CompareFunction FillStencil_depthCompareFunction = CompareFunction.LessEqual;
+
+        [Header ("Draw Silhouette")]
+        public bool DrawSilhouette_DepthState = false;
+        public bool DrawSilhouette_enableWrite = false;
+        public RenderPassEvent DrawSilhouette_renderPassEvent = RenderPassEvent.AfterRenderingOpaques;
+        public CompareFunction DrawSilhouette_depthCompareFunction = CompareFunction.LessEqual;
     }
 
     //must be named settings for inspector to show
@@ -153,6 +156,10 @@ public class OutlineMeshesInLayerFeature : ScriptableRendererFeature
         {
             _renderStateBlock.mask |= RenderStateMask.Depth;
             _renderStateBlock.depthState = new DepthState (writeEnabled, function);
+        }
+        public void ClearDetphState ()
+        {
+            _renderStateBlock = new RenderStateBlock (RenderStateMask.Nothing);
         }
     }
 
@@ -256,6 +263,10 @@ public class OutlineMeshesInLayerFeature : ScriptableRendererFeature
             _renderStateBlock.mask |= RenderStateMask.Depth;
             _renderStateBlock.depthState = new DepthState (writeEnabled, function);
         }
+        public void ClearDetphState ()
+        {
+            _renderStateBlock = new RenderStateBlock (RenderStateMask.Nothing);
+        }
     }
 
     // three of three pass, similar to others
@@ -284,7 +295,7 @@ public class OutlineMeshesInLayerFeature : ScriptableRendererFeature
                 ObjectOutlineSettings settings, Material material, string profilerTag)
         {
             this.settings = settings;
-            this.renderPassEvent = settings.renderPassEvent;
+            this.renderPassEvent = settings.JumpFloodForOutlinePass_renderPassEvent;
 
             this.stencilBuffer = stencilBuffer;
 
@@ -431,8 +442,8 @@ public class OutlineMeshesInLayerFeature : ScriptableRendererFeature
         //these are awful but they just have to pass a lot of info,
         //the passes could get their own ids but I like them in one place. 
         //could be cleaned up a bit
-        fillStencilPass = new FillStencilForOutlinePass(stencilBufferID, StencilFillProfilerTag, settings.layerToRender, settings.outlineMaterial, settings.renderPassEvent);
-        drawSilhouettePass = new DrawSilhouetteForOutlinePass(silhouetteBufferID, settings.outlineMaterial, OutlineProfilerTag, settings.layerToRender, settings.renderPassEvent);
+        fillStencilPass = new FillStencilForOutlinePass(stencilBufferID, StencilFillProfilerTag, settings.layerToRender, settings.outlineMaterial, settings.FillStencil_renderPassEvent);
+        drawSilhouettePass = new DrawSilhouetteForOutlinePass(silhouetteBufferID, settings.outlineMaterial, OutlineProfilerTag, settings.layerToRender, settings.DrawSilhouette_renderPassEvent);
         jumpFloodPass = new JumpFloodForOutlinePass(stencilBufferID, silhouetteBufferID, nearestPointID, nearestPointPingPongID, outlineColorID, outlineWidthID,
             stepWidthID, axisWidthID, settings, settings.outlineMaterial, JumpFloodProfilerTag);
 
@@ -441,9 +452,17 @@ public class OutlineMeshesInLayerFeature : ScriptableRendererFeature
         {
             fillStencilPass.SetDetphState (settings.FillStencil_enableWrite, settings.FillStencil_depthCompareFunction);
         }
-        if (settings.Silhouette_DepthState)
+        else
         {
-            drawSilhouettePass.SetDetphState (settings.Silhouette_enableWrite, settings.Silhouette_depthCompareFunction);
+            fillStencilPass.ClearDetphState ();
+        }
+        if (settings.DrawSilhouette_DepthState)
+        {
+            drawSilhouettePass.SetDetphState (settings.DrawSilhouette_enableWrite, settings.DrawSilhouette_depthCompareFunction);
+        }
+        else
+        {
+            drawSilhouettePass.ClearDetphState ();
         }
     }
 
