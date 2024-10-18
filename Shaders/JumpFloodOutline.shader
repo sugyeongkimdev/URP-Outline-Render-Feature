@@ -1,4 +1,4 @@
-Shader "FeralPug/URP/Outlines/JumpFlood"
+﻿Shader "FeralPug/URP/Outlines/JumpFlood"
 {
     //https://gist.github.com/bgolus/a18c1a3fc9af2d73cc19169a809eb195
 
@@ -384,7 +384,7 @@ Shader "FeralPug/URP/Outlines/JumpFlood"
                 return OUT;
             }
 
-            half4 frag(Varyings IN) : SV_TARGET{
+            float4 frag(Varyings IN) : SV_TARGET{
                 //int pixel pos
                 int2 uvInt = int2(IN.positionCS.xy);
 
@@ -412,7 +412,7 @@ Shader "FeralPug/URP/Outlines/JumpFlood"
                 half outline = saturate(_OutlineWidth - dist + 1.0);
 
                 //apply outline to alpha
-                half4 col = _OutlineColor;
+                float4 col = _OutlineColor;
                 col.a *= outline;
 
                 //profit

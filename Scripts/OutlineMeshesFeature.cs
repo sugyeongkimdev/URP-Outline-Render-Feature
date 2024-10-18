@@ -119,7 +119,8 @@ public class OutlineMeshesInLayerFeature : ScriptableRendererFeature
             
             //make sure your machine supports the texture format, it will fail if it doesn't
             //I used this because by machine supports this format
-            stencilRTD.colorFormat = RenderTextureFormat.ARGB32;
+            //stencilRTD.colorFormat = RenderTextureFormat.ARGB32;
+            stencilRTD.colorFormat = RenderTextureFormat.DefaultHDR;
             cmd.GetTemporaryRT(stencilBuffer, stencilRTD);
 
             //sets target as the stencil buffer
